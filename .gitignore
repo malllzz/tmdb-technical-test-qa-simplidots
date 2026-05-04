@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Cypress Environment Variables
+cypress.env.json
+.env
+
+# Cypress generated files
+cypress/videos/
+cypress/downloads/
+
+# OS generated files
+.DS_Store
+Thumbs.db
