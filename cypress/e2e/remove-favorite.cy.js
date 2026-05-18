@@ -60,8 +60,7 @@ describe('Remove Movie from Favorite', () => {
     cy.get('body').then(($body) => {
       const count = $body.find('.media-card-list .comp\\:media-card').length
       if (count > 0) return
-
-      // ambil movie pertama dari list dan favorite dari detail page
+      
       cy.visit(POPULAR_MOVIES_URL)
       cy.get('.comp\\:poster-card').first()
         .find('a[href^="/movie/"]')
