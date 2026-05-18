@@ -10,9 +10,7 @@ describe('Remove Movie from Favorite', () => {
   const getUsername = () => Cypress.env('username')
   const getPassword = () => Cypress.env('password')
 
-  // =======================
   // Helpers
-  // =======================
   const loginToTMDB = () => {
     cy.visit(`${BASE_URL}/login`)
     cy.url().should('include', '/login')
@@ -95,18 +93,14 @@ describe('Remove Movie from Favorite', () => {
       .invoke('attr', 'href')
   }
 
-  // =======================
   // Setup
-  // =======================
   beforeEach(() => {
     cy.session('tmdb-session', () => {
       loginToTMDB()
     })
   })
 
-  // =======================
   // TC-REM-001
-  // =======================
   it('TC-REM-001: Remove movie via Favorites list page', () => {
     ensureAtLeastOneFavorite()
     openFavoritesPage()
@@ -129,9 +123,7 @@ describe('Remove Movie from Favorite', () => {
     cy.screenshot('TC-REM-001-remove-from-fav-page')
   })
 
-  // =======================
   // TC-REM-002
-  // =======================
   it('TC-REM-002: Remove movie via Movie list page', () => {
     cy.visit(POPULAR_MOVIES_URL)
 
@@ -181,9 +173,7 @@ describe('Remove Movie from Favorite', () => {
     cy.screenshot('TC-REM-002-remove-from-movie-list')
   })
 
-  // =======================
   // TC-REM-003
-  // =======================
   it('TC-REM-003: Remove movie via Detail movie page', () => {
     ensureAtLeastOneFavorite()
     openFavoritesPage()
@@ -194,13 +184,11 @@ describe('Remove Movie from Favorite', () => {
       cy.intercept('PUT', '**/toggle-list-item*').as('toggleFav')
       cy.get('a#favourite.add_to_account_list', { timeout: 10000 }).as('favBtn')
 
-      // remove
       cy.get('@favBtn').click({ force: true })
       cy.wait('@toggleFav').its('response.statusCode').should('eq', 200)
 
       cy.get('@favBtn').find('.heart').should('not.have.class', 'true')
 
-      // pastikan hilang di favorites
       openFavoritesPage()
       cy.get('body').then(($body) => {
         expect($body.find(`a[href="${href}"]`).length).to.eq(0)
@@ -210,15 +198,12 @@ describe('Remove Movie from Favorite', () => {
     cy.screenshot('TC-REM-003-remove-from-detail-page')
   })
 
-  // =======================
   // TC-REM-004
-  // =======================
   it('TC-REM-004: Favorite status sync across pages', () => {
     ensureAtLeastOneFavorite()
     openFavoritesPage()
 
     getFirstFavoriteMovieLink().then((href) => {
-      // remove dari favorites
       cy.intercept('PUT', '**/toggle-list-item*').as('toggleFav')
       cy.get('.media-card-list .comp\\:media-card')
         .first()
@@ -228,7 +213,6 @@ describe('Remove Movie from Favorite', () => {
 
       cy.wait('@toggleFav').its('response.statusCode').should('eq', 200)
 
-      // buka detail movie yg sama
       cy.visit(`${BASE_URL}${href}`)
       cy.get('a#favourite.add_to_account_list .heart')
         .should('not.have.class', 'true')
@@ -237,9 +221,7 @@ describe('Remove Movie from Favorite', () => {
     cy.screenshot('TC-REM-004-sync-across-pages')
   })
 
-  // =======================
   // TC-REM-005
-  // =======================
   it('TC-REM-005: Remove the last favorite movie', () => {
     ensureExactlyOneFavorite()
     openFavoritesPage()
