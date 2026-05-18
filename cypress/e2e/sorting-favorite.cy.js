@@ -133,7 +133,7 @@ describe('Sort Favorite Movie List', () => {
     selectSortOptionUI('popularity')
 
     cy.wait(3000)
-    cy.screenshot('sorting-popularity')
+    cy.screenshot('TC-SORT-001-sorting-popularity')
   })
 
   // TC-SORT-002
@@ -142,7 +142,7 @@ describe('Sort Favorite Movie List', () => {
     selectSortOptionUI('release_date')
 
     cy.wait(3000)
-    cy.screenshot('sorting-release-date')
+    cy.screenshot('TC-SORT-002-sorting-release-date')
   })
 
   // TC-SORT-003
@@ -151,7 +151,7 @@ describe('Sort Favorite Movie List', () => {
     selectSortOptionUI('created_at')
 
     cy.wait(3000)
-    cy.screenshot('sorting-date-added')
+    cy.screenshot('TC-SORT-003-sorting-date-added')
   })
 
   // TC-SORT-004
@@ -173,7 +173,7 @@ describe('Sort Favorite Movie List', () => {
     cy.get('.media-card-list .comp\\:media-card').should('have.length.at.least', 1)
 
     cy.wait(3000)
-    cy.screenshot('sorting-default-reset')
+    cy.screenshot('TC-SORT-004-sorting-default-reset')
   })
 
   // TC-SORT-005
@@ -183,6 +183,6 @@ describe('Sort Favorite Movie List', () => {
     cy.contains("This request could not be completed.").should('be.visible')
 
     cy.wait(3000)
-    cy.screenshot('invalid-option-error-page')
+    cy.screenshot('TC-SORT-005-invalid-option-error-page')
   })
 })

@@ -86,25 +86,25 @@ describe('Change Application Language', () => {
   })
 
   // TC-LANG-001
-  it('should change language to English', () => {
+  it('TC-LANG-001: should change language to English', () => {
     changeLanguage('en-US')
     cy.contains('Movies', { timeout: 15000 }).should('be.visible')
 
     cy.wait(3000)
-    cy.screenshot('lang-en-us')
+    cy.screenshot('TC-LANG-001-lang-en-us')
   })
 
   // TC-LANG-002
-  it('should change language to Bahasa Indonesia', () => {
+  it('TC-LANG-002: should change language to Bahasa Indonesia', () => {
     changeLanguageIfNeeded('id-ID')
     cy.contains('Film', { timeout: 10000 }).should('be.visible')
 
     cy.wait(3000)
-    cy.screenshot('lang-id-id')
+    cy.screenshot('TC-LANG-002-lang-id-id')
   })
 
   // TC-LANG-003
-  it('should persist favorite data after language change (with login)', () => {
+  it('TC-LANG-003: should persist favorite data after language change (with login)', () => {
     cy.loginTMDB()
 
     cy.visit(`${BASE_URL}/u/${getUsername()}/favorites`)
@@ -119,19 +119,19 @@ describe('Change Application Language', () => {
     cy.visit(`${BASE_URL}/u/${getUsername()}/favorites`)
     cy.title().should('match', /Favorites|My Favorites|Favorite Movies/i)
     cy.wait(3000)
-    cy.screenshot('fav-lang-en-us')
+    cy.screenshot('TC-LANG-003-fav-lang-en-us')
 
     changeLanguageIfNeeded('id-ID')
     cy.visit(`${BASE_URL}/u/${getUsername()}/favorites`)
     cy.title().should('match', /Favorit Saya|Paling Disuka/i)
     cy.wait(3000)
-    cy.screenshot('fav-lang-id-id')
+    cy.screenshot('TC-LANG-003-fav-lang-id-id')
 
     cy.url().should('include', 'favorite')
   })
 
   // TC-LANG-004
-  it('should NOT change language without clicking reload', () => {
+  it('TC-LANG-004: should NOT change language without clicking reload', () => {
     cy.title().then((titleBefore) => {
       openLanguageMenu()
 
@@ -144,13 +144,13 @@ describe('Change Application Language', () => {
         cy.title().should('eq', titleBefore)
 
         cy.wait(3000)
-        cy.screenshot('lang-no-reload')
+        cy.screenshot('TC-LANG-004-lang-no-reload')
       })
     })
   })
 
   // TC-LANG-005
-  it('should fallback to current language for invalid selection', () => {
+  it('TC-LANG-005: should fallback to current language for invalid selection', () => {
     openLanguageMenu()
 
     cy.get('#default_language_popup').invoke('val').then((current) => {
@@ -161,6 +161,6 @@ describe('Change Application Language', () => {
     cy.get('.k-tooltip-content p.refresh').should('have.class', 'hide')
 
     cy.wait(3000)
-    cy.screenshot('lang-invalid-no-change')
+    cy.screenshot('TC-LANG-005-lang-invalid-no-change')
   })
 })

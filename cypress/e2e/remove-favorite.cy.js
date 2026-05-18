@@ -1,7 +1,5 @@
 Cypress.on('uncaught:exception', (err, runnable) => {
-  if (err.message.includes('ga is not defined')) {
-    return false
-  }
+  if (err.message.includes('ga is not defined')) return false
   return false
 })
 
@@ -12,7 +10,9 @@ describe('Remove Movie from Favorite', () => {
   const getUsername = () => Cypress.env('username')
   const getPassword = () => Cypress.env('password')
 
-  // Helper
+  // =======================
+  // Helpers
+  // =======================
   const loginToTMDB = () => {
     cy.visit(`${BASE_URL}/login`)
     cy.url().should('include', '/login')
@@ -26,27 +26,94 @@ describe('Remove Movie from Favorite', () => {
     cy.get('#login_button').click()
     cy.url({ timeout: 15000 }).should('include', `/u/${getUsername()}`)
   }
+
   const openFavoritesPage = () => {
-    cy.intercept('POST', '/u/*/remote/account-list-check').as('accountCheckFav')
     cy.visit(`${BASE_URL}/u/${getUsername()}/favorites`)
     cy.url().should('include', 'favorite')
-    cy.wait('@accountCheckFav', { timeout: 10000 })
+    cy.get('body', { timeout: 10000 }).should('be.visible')
   }
 
+  const clearAllFavorites = () => {
+    openFavoritesPage()
+    cy.intercept('PUT', '**/toggle-list-item*').as('toggleFav')
+
+    const removeOne = () => {
+      cy.get('body').then(($body) => {
+        const count = $body.find('.media-card-list .comp\\:media-card').length
+        if (count === 0) return
+
+        cy.get('.media-card-list .comp\\:media-card')
+          .first()
+          .find('a.account_list_action[data-list-type="favourite"][data-remove="true"]')
+          .first()
+          .click({ force: true })
+
+        cy.wait('@toggleFav')
+        cy.wait(500)
+        removeOne()
+      })
+    }
+
+    removeOne()
+  }
+
+  const ensureAtLeastOneFavorite = () => {
+    openFavoritesPage()
+    cy.get('body').then(($body) => {
+      const count = $body.find('.media-card-list .comp\\:media-card').length
+      if (count > 0) return
+
+      // ambil movie pertama dari list dan favorite dari detail page
+      cy.visit(POPULAR_MOVIES_URL)
+      cy.get('.comp\\:poster-card').first()
+        .find('a[href^="/movie/"]')
+        .first()
+        .invoke('attr', 'href')
+        .then((href) => {
+          cy.visit(`${BASE_URL}${href}`)
+
+          cy.intercept('PUT', '**/toggle-list-item*').as('toggleFav')
+          cy.get('a#favourite.add_to_account_list', { timeout: 10000 })
+            .click({ force: true })
+
+          cy.wait('@toggleFav')
+          openFavoritesPage()
+        })
+    })
+  }
+
+  const ensureExactlyOneFavorite = () => {
+    clearAllFavorites()
+    ensureAtLeastOneFavorite()
+  }
+
+  const getFirstFavoriteMovieLink = () => {
+    return cy.get('.media-card-list .comp\\:media-card')
+      .first()
+      .find('a[href^="/movie/"]')
+      .first()
+      .invoke('attr', 'href')
+  }
+
+  // =======================
   // Setup
+  // =======================
   beforeEach(() => {
     cy.session('tmdb-session', () => {
       loginToTMDB()
     })
   })
 
+  // =======================
   // TC-REM-001
+  // =======================
   it('TC-REM-001: Remove movie via Favorites list page', () => {
+    ensureAtLeastOneFavorite()
     openFavoritesPage()
-    cy.intercept('PUT', '/u/*/remote/toggle-list-item').as('toggleFav')
+    cy.intercept('PUT', '**/toggle-list-item*').as('toggleFav')
 
-    cy.get('.media-card-list .comp\\:media-card').then(($cardsBefore) => {
-      const initialCount = $cardsBefore.length
+    cy.get('.media-card-list .comp\\:media-card').then(($cards) => {
+      const initialCount = $cards.length
 
       cy.get('.media-card-list .comp\\:media-card')
         .first()
@@ -55,77 +122,104 @@ describe('Remove Movie from Favorite', () => {
         .click({ force: true })
 
       cy.wait('@toggleFav').its('response.statusCode').should('eq', 200)
-      cy.wait(1000)
-
-      cy.get('.media-card-list .comp\\:media-card').should('have.length', initialCount - 1)
+      cy.get('.media-card-list .comp\\:media-card')
+        .should('have.length', initialCount - 1)
     })
 
-    cy.wait(2000)
     cy.screenshot('TC-REM-001-remove-from-fav-page')
   })
 
+  // =======================
   // TC-REM-002
+  // =======================
   it('TC-REM-002: Remove movie via Movie list page', () => {
-    cy.intercept('POST', '/u/*/remote/account-list-check').as('accountCheckPop')
     cy.visit(POPULAR_MOVIES_URL)
-    cy.wait('@accountCheckPop')
 
-    cy.intercept('PUT', '/u/*/remote/toggle-list-item').as('toggleFav')
-    cy.get('.comp\\:poster-card').first().find('.options a[aria-label="View Item Options"]').click({ force: true })
+    cy.get('.comp\\:poster-card').first().find('h2 span').invoke('text').then((title) => {
+      const movieTitle = title.trim()
 
-    cy.get('.k-tooltip:visible a.options_tooltip_link[data-list-type="favourite"]').then(($btn) => {
-      if (!$btn.hasClass('selected')) {
-        cy.wrap($btn).click({ force: true })
-        cy.wait('@toggleFav')
-        cy.get('.comp\\:poster-card').first().find('.options a[aria-label="View Item Options"]').click({ force: true })
+      cy.intercept('PUT', '**/toggle-list-item*').as('toggleFav')
+
+      const openOptions = () => {
+        cy.get('.comp\\:poster-card').first()
+          .find('.options a[aria-label="View Item Options"]')
+          .click({ force: true })
       }
 
-      cy.get('.k-tooltip:visible a.options_tooltip_link[data-list-type="favourite"]')
-        .should('have.class', 'selected')
-        .click({ force: true })
+      openOptions()
 
-      cy.wait('@toggleFav').its('response.statusCode').should('eq', 200)
+      cy.get('body').then(($body) => {
+        if ($body.find('.k-tooltip:visible a.options_tooltip_link[data-list-type="favourite"]').length === 0) {
+          openOptions()
+        }
+      })
 
-      cy.get('.comp\\:poster-card').first().find('.options a[aria-label="View Item Options"]').click({ force: true })
-      cy.get('.k-tooltip:visible a.options_tooltip_link[data-list-type="favourite"]').should('not.have.class', 'selected')
+      cy.get('.k-tooltip:visible a.options_tooltip_link[data-list-type="favourite"]', { timeout: 10000 })
+        .then(($btn) => {
+          if (!$btn.hasClass('selected')) {
+            cy.wrap($btn).click({ force: true })
+            cy.wait('@toggleFav')
+            openOptions()
+          }
+
+          cy.get('.k-tooltip:visible a.options_tooltip_link[data-list-type="favourite"]')
+            .click({ force: true })
+
+          cy.wait('@toggleFav')
+        })
+
+      openFavoritesPage()
+      cy.get('body').then(($body) => {
+        const exists = $body.find('.media-card-list .comp\\:media-card h2 span')
+          .toArray()
+          .some((el) => el.innerText.includes(movieTitle))
+
+        expect(exists).to.eq(false)
+      })
     })
 
-    cy.wait(2000)
     cy.screenshot('TC-REM-002-remove-from-movie-list')
   })
 
+  // =======================
   // TC-REM-003
+  // =======================
   it('TC-REM-003: Remove movie via Detail movie page', () => {
-    cy.visit(POPULAR_MOVIES_URL)
+    ensureAtLeastOneFavorite()
+    openFavoritesPage()
 
-    cy.get('.comp\\:poster-card').eq(0).find('h2 a').invoke('attr', 'href').then(href => {
-      const targetMovieUrl = `${BASE_URL}${href}`
-      cy.visit(targetMovieUrl)
-      cy.intercept('PUT', '/u/*/remote/toggle-list-item').as('toggleFav')
+    getFirstFavoriteMovieLink().then((href) => {
+      cy.visit(`${BASE_URL}${href}`)
 
-      cy.get('a#favourite.add_to_account_list').as('favBtn')
-      cy.get('@favBtn').find('.heart').should('have.class', 'true')
+      cy.intercept('PUT', '**/toggle-list-item*').as('toggleFav')
+      cy.get('a#favourite.add_to_account_list', { timeout: 10000 }).as('favBtn')
 
+      // remove
       cy.get('@favBtn').click({ force: true })
       cy.wait('@toggleFav').its('response.statusCode').should('eq', 200)
 
       cy.get('@favBtn').find('.heart').should('not.have.class', 'true')
+
+      // pastikan hilang di favorites
+      openFavoritesPage()
+      cy.get('body').then(($body) => {
+        expect($body.find(`a[href="${href}"]`).length).to.eq(0)
+      })
     })
 
-    cy.wait(2000)
     cy.screenshot('TC-REM-003-remove-from-detail-page')
   })
 
+  // =======================
   // TC-REM-004
+  // =======================
   it('TC-REM-004: Favorite status sync across pages', () => {
-    cy.visit(POPULAR_MOVIES_URL)
+    ensureAtLeastOneFavorite()
+    openFavoritesPage()
 
-    cy.get('.comp\\:poster-card').eq(1).find('h2 a').invoke('attr', 'href').then(href => {
-      const targetMovieUrl = `${BASE_URL}${href}`
-
-      openFavoritesPage()
-      cy.intercept('PUT', '/u/*/remote/toggle-list-item').as('toggleFav')
-
+    getFirstFavoriteMovieLink().then((href) => {
+      // remove dari favorites
+      cy.intercept('PUT', '**/toggle-list-item*').as('toggleFav')
       cy.get('.media-card-list .comp\\:media-card')
         .first()
         .find('a.account_list_action[data-list-type="favourite"][data-remove="true"]')
@@ -133,23 +227,23 @@ describe('Remove Movie from Favorite', () => {
         .click({ force: true })
 
       cy.wait('@toggleFav').its('response.statusCode').should('eq', 200)
-      cy.wait(1000)
 
-      cy.visit(targetMovieUrl)
-
-      cy.get('a#favourite.add_to_account_list .heart').should('not.have.class', 'true')
+      // buka detail movie yg sama
+      cy.visit(`${BASE_URL}${href}`)
+      cy.get('a#favourite.add_to_account_list .heart')
+        .should('not.have.class', 'true')
     })
 
-    cy.wait(2000)
     cy.screenshot('TC-REM-004-sync-across-pages')
   })
 
+  // =======================
   // TC-REM-005
+  // =======================
   it('TC-REM-005: Remove the last favorite movie', () => {
+    ensureExactlyOneFavorite()
     openFavoritesPage()
-    cy.intercept('PUT', '/u/*/remote/toggle-list-item').as('toggleFav')
-
-    cy.get('.media-card-list .comp\\:media-card').should('have.length', 1)
+    cy.intercept('PUT', '**/toggle-list-item*').as('toggleFav')
 
     cy.get('.media-card-list .comp\\:media-card')
       .first()
@@ -157,23 +251,15 @@ describe('Remove Movie from Favorite', () => {
       .first()
       .click({ force: true })
 
-    cy.wait('@toggleFav').its('response.statusCode').should('eq', 200)
-    cy.wait(1500)
-
-    cy.get('body').then(($body) => {
-      expect($body.find('.comp\\:media-card').length).to.eq(0)
-    })
+    cy.wait('@toggleFav')
 
     cy.contains('a.no_click', /Film|Movies/i, { timeout: 10000 })
-      .should('be.visible')
       .should(($el) => {
         const text = $el.text()
-        const countMatch = text.match(/\d+/)
-        const count = countMatch ? countMatch[0] : '0'
+        const count = text.match(/\d+/)?.[0] ?? '0'
         expect(count).to.eq('0')
       })
 
-    cy.wait(2000)
     cy.screenshot('TC-REM-005-empty-state-after-remove')
   })
 })

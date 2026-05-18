@@ -172,17 +172,17 @@ describe('View Favorite Movie List', () => {
   })
 
   // TC-VIEW-001
-  it('User accesses favorite movie page', () => {
+  it('TC-VIEW-001: User accesses favorite movie page', () => {
     login()
     openFavoritesPage()
     cy.get('body').should('be.visible')
 
     cy.wait(3000)
-    cy.screenshot('view-fav-page')
+    cy.screenshot('TC-VIEW-001-view-fav-page')
   })
 
   // TC-VIEW-002
-  it('Favorite movie information is consistent', () => {
+  it('TC-VIEW-002: Favorite movie information is consistent', () => {
     login()
     openPopularMoviesLoggedIn()
 
@@ -196,7 +196,7 @@ describe('View Favorite Movie List', () => {
       assertMovieInFavorites(title)
 
       cy.wait(3000)
-      cy.screenshot('view-fav-info-consistent')
+      cy.screenshot('TC-VIEW-002-view-fav-info-consistent')
     })
   })
 
@@ -225,23 +225,23 @@ describe('View Favorite Movie List', () => {
         assertMovieInFavorites(firstTitle)
 
         cy.wait(3000)
-        cy.screenshot('view-fav-sort')
+        cy.screenshot('TC-VIEW-003-view-fav-sort')
       })
     })
   })
 
   // TC-VIEW-004
-  it('User views empty favorite list', () => {
+  it('TC-VIEW-004: User views empty favorite list', () => {
     login(getEmptyUsername(), getEmptyPassword())
     openFavoritesPage(getEmptyUsername())
     assertEmptyFavoritesState()
 
     cy.wait(3000)
-    cy.screenshot('view-empty-fav')
+    cy.screenshot('TC-VIEW-004-view-empty-fav')
   })
 
   // TC-VIEW-005
-  it('User tries to access favorite list without login', () => {
+  it('TC-VIEW-005: User tries to access favorite list without login', () => {
     cy.clearCookies()
     cy.clearLocalStorage()
     cy.visit(`${BASE_URL}/u/${getUsername()}/favorites`, { failOnStatusCode: false })
@@ -249,6 +249,6 @@ describe('View Favorite Movie List', () => {
     cy.contains("You've tried to request a page that is private").should('be.visible')
 
     cy.wait(3000)
-    cy.screenshot('view-fav-not-logged-in')
+    cy.screenshot('TC-VIEW-005-view-fav-not-logged-in')
   })
 })

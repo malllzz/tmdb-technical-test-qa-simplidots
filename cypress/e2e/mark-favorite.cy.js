@@ -123,7 +123,7 @@ describe('Mark Movie as Favorite', () => {
   })
 
   // TC-FAV-001
-  it('should add movie to favorite from movie listing page', () => {
+  it('TC-FAV-001: should add movie to favorite from movie listing page', () => {
     login()
     openPopularMoviesLoggedIn()
 
@@ -133,19 +133,19 @@ describe('Mark Movie as Favorite', () => {
 
       assertSuccessToast()
       cy.wait(2000)
-      cy.screenshot('favorite-toast-success-list')
+      cy.screenshot('TC-FAV-001-favorite-toast-success-list')
 
       assertCardFavoriteActive()
 
       openFavoritesPage()
       assertMovieInFavorites(movieTitle)
       cy.wait(2000)
-      cy.screenshot('favorite-list-verified')
+      cy.screenshot('TC-FAV-001-favorite-list-verified')
     })
   })
 
   // TC-FAV-002
-  it('should add movie to favorite from movie detail page', () => {
+  it('TC-FAV-002: should add movie to favorite from movie detail page', () => {
     login()
     openPopularMoviesLoggedIn()
 
@@ -158,29 +158,29 @@ describe('Mark Movie as Favorite', () => {
       clickFavoriteOnDetail()
       assertDetailFavoriteActive()
       cy.wait(2000)
-      cy.screenshot('favorite-detail-active')
+      cy.screenshot('TC-FAV-002-favorite-detail-active')
 
       openFavoritesPage()
       assertMovieInFavorites(movieTitle.trim())
       cy.wait(2000)
-      cy.screenshot('favorite-detail-listed')
+      cy.screenshot('TC-FAV-002-favorite-detail-listed')
     })
   })
 
   // TC-FAV-003
-  it('should prompt login when trying to favorite without login', () => {
+  it('TC-FAV-003: should prompt login when trying to favorite without login', () => {
     openPopularMovies()
     openFirstMovieDetail()
     clickFavoriteOnDetail()
 
     assertLoginPrompt()
     cy.wait(2000)
-    cy.screenshot('favorite-login-prompt')
+    cy.screenshot('TC-FAV-003-favorite-login-prompt')
   })
 
 
   // TC-FAV-004
-  it('should add multiple movies sequentially to favorites', () => {
+  it('TC-FAV-004: should add multiple movies sequentially to favorites', () => {
     login()
     openPopularMoviesLoggedIn()
 
@@ -209,13 +209,13 @@ describe('Mark Movie as Favorite', () => {
         assertMovieInFavorites(firstTitle.trim())
         assertMovieInFavorites(secondTitle.trim())
         cy.wait(3000)
-        cy.screenshot('favorite-multiple-verified')
+        cy.screenshot('TC-FAV-004-favorite-multiple-verified')
       })
     })
   })
 
   // TC-FAV-005
-  it('should remove favorite when clicked again on same movie', () => {
+  it('TC-FAV-005: should remove favorite when clicked again on same movie', () => {
     login()
     openPopularMoviesLoggedIn()
 
@@ -242,7 +242,7 @@ describe('Mark Movie as Favorite', () => {
       cy.wait(1000)
       toggleFavoriteFromCard('@fifthCard')
       cy.wait(2000)
-      cy.screenshot('favorite-removed-toast')
+      cy.screenshot('TC-FAV-005-favorite-removed-toast')
 
       cy.get('@fifthCard')
         .find('.options a[aria-label="View Item Options"]')
@@ -254,12 +254,12 @@ describe('Mark Movie as Favorite', () => {
       openFavoritesPage()
       assertMovieNotInFavorites(movieTitle.trim())
       cy.wait(2000)
-      cy.screenshot('favorite-removed-verified')
+      cy.screenshot('TC-FAV-005-favorite-removed-verified')
     })
   })
 
   // TC-FAV-006
-  it('should persist favorite state after refresh', () => {
+  it('TC-FAV-006: should persist favorite state after refresh', () => {
     login()
     openPopularMoviesLoggedIn()
 
@@ -285,7 +285,7 @@ describe('Mark Movie as Favorite', () => {
 
       cy.reload()
       cy.wait(2000)
-      cy.screenshot('favorite-refresh-check')
+      cy.screenshot('TC-FAV-006-favorite-refresh-check')
 
 
       cy.get('.comp\\:poster-card').eq(5).as('sixthCard')
@@ -300,7 +300,7 @@ describe('Mark Movie as Favorite', () => {
       openFavoritesPage()
       assertMovieInFavorites(movieTitle.trim())
       cy.wait(2000)
-      cy.screenshot('favorite-refresh-listed')
+      cy.screenshot('TC-FAV-006-favorite-refresh-listed')
     })
   })
 })
