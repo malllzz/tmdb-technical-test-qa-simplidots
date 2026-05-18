@@ -8,6 +8,7 @@ cypress.env.json
 # Cypress generated files
 cypress/videos/
 cypress/downloads/
+cypress/screenshots/
 
 # OS generated files
 .DS_Store
